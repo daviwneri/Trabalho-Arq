@@ -1,2 +1,2 @@
 # Trabalho-Arq
-Repositório para fazr o trabalho de arquitetura
+Repositório para fazer o trabalho de arquitetura
