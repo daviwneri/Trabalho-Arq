@@ -1,5 +1,6 @@
 # Memória principal
-memPrinc = []
+memDados = []
+memInst = []
 
 # Banco de registradores
 bancReg = []
@@ -41,47 +42,4 @@ dicRegist = {
 }
 
 
-# Acesso a ULA (etapa 3)
-def acesso_ula (regd, reg1, x, op):
-    if (op is None):
-        print("Operação não encontrada")
-        return None
-
-    elif (op == 'soma'):
-        regd = reg1 + x
-
-    elif (op == 'sub'):
-        regd = reg1 - x
-
-    elif (op == 'mult'):
-        regd = reg1*x
-
-    else:
-        print("Operação inválida")
-        return None
-    
-    return regd
-
-
-# Acesso a memória de dados (etapa 4)
-def acesso_mem_dados (dest, orig, op):
-    if (op is None):
-        print("Operação não encontrada")
-        return None
-    
-    elif (op == 'sw'):
-        memPrinc[dest] = orig
-    
-    elif (op == 'lw'):
-        conteudo = memPrinc[orig]
-        return conteudo
-
-    else:
-        print("Operação inválida")
-        return None
-    
-
-# Escrita no banco de registradores (etapa 5)
-def ecrita_banc_reg (regd, x):
-    bancReg[regd] = x
 
