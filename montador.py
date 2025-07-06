@@ -7,20 +7,20 @@ class Montador:
         self.funct3_map = self._init_funct3()
         self.funct7_map = self._init_funct7()
         self.opcode_map = self._init_opcodes()
-        
+
     def _init_registers(self):
-        """Inicializa o mapeamento de registradores"""
-        registradores = {f'x{i}': i for i in range(32)}
-        registradores.update({
+        regs = {f'x{i}': i for i in range(32)}
+        regs.update({
             'zero': 0, 'ra': 1, 'sp': 2, 'gp': 3, 'tp': 4,
             't0': 5, 't1': 6, 't2': 7, 's0': 8, 'fp': 8, 's1': 9,
             'a0': 10, 'a1': 11, 'a2': 12, 'a3': 13, 'a4': 14, 'a5': 15,
-            'a6': 16, 'a7': 17
+            'a6': 16, 'a7': 17, 's2': 18, 's3': 19, 's4': 20, 's5': 21, 's6': 22,
+            's7': 23, 's8': 24, 's9': 25, 's10': 26, 's11': 27,
+            't3': 28, 't4': 29, 't5': 30, 't6': 31
         })
-        return registradores
+        return regs
 
     def _init_funct3(self):
-        """Mapeamento de funct3 para instruções"""
         return {
             'ADD': 0b000, 'SUB': 0b000, 'MUL': 0b000, 'DIV': 0b100, 'REM': 0b110,
             'XOR': 0b100, 'AND': 0b111, 'OR': 0b110, 'SLL': 0b001, 'SRL': 0b101,
@@ -30,7 +30,6 @@ class Montador:
         }
 
     def _init_funct7(self):
-        """Mapeamento de funct7 para instruções"""
         return {
             'ADD': 0b0000000, 'SUB': 0b0100000, 'MUL': 0b0000001,
             'DIV': 0b0000001, 'REM': 0b0000001, 'XOR': 0b0000000,
@@ -39,7 +38,6 @@ class Montador:
         }
 
     def _init_opcodes(self):
-        """Mapeamento de opcodes para formatos de instrução"""
         return {
             'R': 0b0110011, 'I': 0b0010011, 'S': 0b0100011,
             'B': 0b1100011, 'J': 0b1101111, 'LW': 0b0000011,
@@ -47,77 +45,63 @@ class Montador:
         }
 
     def ler_arquivo(self, caminho):
-        """Lê o arquivo de entrada e remove comentários e linhas vazias"""
         with open(caminho, 'r', encoding='utf-8') as f:
-            return [linha.split('#')[0].strip() 
-                    for linha in f 
-                    if linha.strip() and not linha.startswith('#')]
+            return [linha.split('#')[0].strip() for linha in f if linha.strip() and not linha.startswith('#')]
 
     def dividir_secoes(self, linhas):
-        """Divide o código nas seções .data e .text"""
         secao = None
-        data = []
-        text = []
-        
+        data, text = [], []
         for linha in linhas:
-            if linha == '.data':
-                secao = 'data'
-                continue
-            elif linha == '.text':
-                secao = 'text'
-                continue
-                
-            if secao == 'data':
-                data.append(linha)
-            elif secao == 'text':
-                text.append(linha)
-                
+            if linha == '.data': secao = 'data'; continue
+            elif linha == '.text': secao = 'text'; continue
+            if secao == 'data': data.append(linha)
+            elif secao == 'text': text.append(linha)
         return data, text
 
     def parse_instrucao(self, linha):
-        """Extrai labels e instruções de uma linha"""
         if ':' in linha:
             label, resto = linha.split(':', 1)
             return {'label': label.strip(), 'instrucao': resto.strip()}
         return {'label': None, 'instrucao': linha.strip()}
 
+    def expandir_pseudoinstrucoes(self, instrucoes):
+        expandidas = []
+        for pc, instr in instrucoes:
+            tokens = re.split(r'[\s,]+', instr)
+            op = tokens[0].upper()
+            if op == 'LI':
+                rd, imm = tokens[1], tokens[2]
+                expandidas.append((pc, f"ADDI {rd}, zero, {imm}"))
+            elif op == 'MV':
+                rd, rs = tokens[1], tokens[2]
+                expandidas.append((pc, f"ADDI {rd}, {rs}, 0"))
+            elif op == 'NOP':
+                expandidas.append((pc, "ADDI x0, x0, 0"))
+            else:
+                expandidas.append((pc, instr))
+        return expandidas
+
     def processar_data(self, linhas_data):
-        """Processa a seção .data"""
         labels = {}
         memoria = bytearray()
         offset = 0
-        
         for linha in linhas_data:
-            try:
-                if '.word' in linha:
-                    label, valores = linha.split(':', 1)
-                    label = label.strip()
-                    valores = [int(v.strip()) for v in valores.split('.word')[1].split(',')]
-                    labels[label] = offset
-                    for valor in valores:
-                        memoria += struct.pack('<i', valor)
-                    offset += len(valores) * 4
-            except Exception as e:
-                raise ValueError(f"Erro processando .data: {linha}\n{str(e)}")
-                
+            if '.word' in linha:
+                label, valores = linha.split(':', 1)
+                label = label.strip()
+                valores = [int(v.strip()) for v in valores.split('.word')[1].split(',')]
+                labels[label] = offset
+                for valor in valores:
+                    memoria += struct.pack('<i', valor)
+                offset += len(valores) * 4
         return labels, memoria
 
     def primeira_passagem(self, linhas_text):
-        """Primeira passagem para construir tabela de símbolos"""
-        labels = {}
-        instrucoes = []
-        pc = 0
-        
+        labels, instrucoes, pc = {}, [], 0
         for linha in linhas_text:
             parsed = self.parse_instrucao(linha)
-            
-            if parsed['label']:
-                labels[parsed['label']] = pc
-                
-            if parsed['instrucao']:
-                instrucoes.append((pc, parsed['instrucao']))
-                pc += 4
-                    
+            if parsed['label']: labels[parsed['label']] = pc
+            if parsed['instrucao']: instrucoes.append((pc, parsed['instrucao'])); pc += 4
         return labels, instrucoes
 
     def montar_instrucao(self, instrucao, labels, pc):
@@ -261,15 +245,14 @@ class Montador:
         else:
             raise ValueError(f"Instrução não suportada: {instr}")
 
-    def montar(self, caminho_entrada, caminho_saida=None):
-        """Função principal que realiza toda a montagem"""
+    def montar(self, caminho_entrada, caminho_saida_base=None):
         linhas = self.ler_arquivo(caminho_entrada)
         data_linhas, text_linhas = self.dividir_secoes(linhas)
-        
         labels_data, memoria_data = self.processar_data(data_linhas)
-        labels_text, instrucoes = self.primeira_passagem(text_linhas)
+        labels_text, instrucoes_raw = self.primeira_passagem(text_linhas)
+        instrucoes = self.expandir_pseudoinstrucoes(instrucoes_raw)
         labels = {**labels_data, **labels_text}
-        
+
         memoria_text = bytearray()
         for pc, instr in instrucoes:
             try:
@@ -277,23 +260,20 @@ class Montador:
                 memoria_text += codigo
             except Exception as e:
                 raise ValueError(f"Erro em PC={pc:04X}: {instr}\n{str(e)}")
-        
-        if not caminho_saida:
-            caminho_saida = caminho_entrada.rsplit('.', 1)[0] + '.bin'
-            
-        with open(caminho_saida, 'wb') as f:
-            f.write(memoria_data)
-            f.write(memoria_text)
-            
-        return memoria_data, memoria_text
 
+        base = caminho_saida_base or caminho_entrada.rsplit('.', 1)[0]
+        with open(f'{base}_data.bin', 'wb') as f:
+            f.write(memoria_data)
+        with open(f'{base}_text.bin', 'wb') as f:
+            f.write(memoria_text)
+
+        return memoria_data, memoria_text
 
 if __name__ == '__main__':
     import sys
     if len(sys.argv) < 2:
-        print("Uso: python montador.py entrada.asm [saida.bin]")
+        print("Uso: python montador.py entrada.asm [saida_base]")
         sys.exit(1)
-        
     montador = Montador()
     try:
         montador.montar(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else None)
