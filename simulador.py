@@ -274,3 +274,33 @@ class Simulador:
         self.etapa_IF()
         self.ciclo += 1
 
+    def exibir_estado(self):
+        print("Registradores:")
+        for i in range(0, 32, 8):
+            print("  " + "  ".join([f"x{j:<2}={self.bancoReg[j]:<5}" for j in range(i, i+8)]))
+        print("PC:", self.pc)
+
+    
+    def executar(self):
+        self.IF_ID = {}
+        self.ID_EX = {}
+        self.EX_MEM = {}
+        self.MEM_WB = {}
+
+        while self.ciclo < 10000:
+            print(f"\nCiclo {self.ciclo}")      
+            self.executar_ciclo()
+            self.exibir_estado()
+
+            if (
+                self.pc >= len(self.instrucoes) * 4 and
+                not self.IF_ID and
+                not self.ID_EX and
+                not self.EX_MEM and
+                not self.MEM_WB
+            ):
+                break
+
+
+sim = Simulador('Teste_data.bin', 'Teste_text.bin')
+sim.executar()
