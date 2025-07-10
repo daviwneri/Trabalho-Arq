@@ -1,7 +1,7 @@
 .data
 valor1: .word 15      # memória[0] = 15
 valor2: .word 27      # memória[4] = 27
-resultado: .word 0    # memória[8] = 0 (vai guardar resultado)
+resultado: .word 0    # memória[8] = 0 
 
 .text
     LW x1, 0(x0)         # x1 = valor1 (15)
