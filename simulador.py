@@ -7,7 +7,7 @@ class Simulador:
         self.memoria_dados = self.carregar_memoria(file_data)
         self.instrucoes = self.carregar_instrucoes(file_text)
         self.pc = 0 
-        self.ciclo = 0
+        self.ciclo = 1
 
         self.IF_ID = {}
         self.ID_EX = {}
@@ -205,9 +205,14 @@ class Simulador:
             rs1 = self.bancoReg[self.ID_EX['rs1']]
             rs2 = self.bancoReg[self.ID_EX['rs2']]
             desvia = False
+
             if self.ID_EX['funct3'] == 0b000 and rs1 == rs2:  # BEQ
                 desvia = True
             elif self.ID_EX['funct3'] == 0b001 and rs1 != rs2:  # BNE
+                desvia = True
+            elif self.ID_EX['funct3'] == 0b100 and rs1 < rs2:   # BLT
+                desvia = True
+            elif self.ID_EX['funct3'] == 0b101 and rs1 >= rs2:  # BGE
                 desvia = True
             self.EX_MEM = {'tipo': 'B', 'desvia': desvia, 'novo_pc': self.ID_EX['pc'] + self.ID_EX['imm']}
             
@@ -242,13 +247,16 @@ class Simulador:
         elif tipo == 'B':
             if self.EX_MEM['desvia']:
                 self.pc = self.EX_MEM['novo_pc']
-                self.IF_ID = {} 
+                self.IF_ID = {}
+                self.ID_EX = {}
             self.MEM_WB = {'tipo': 'B'}
 
         elif tipo == 'J':
-            self.bancoReg[self.EX_MEM['rd']] = self.EX_MEM['pc_retorno']
+            if self.EX_MEM['rd'] != 0:
+                self.bancoReg[self.EX_MEM['rd']] = self.EX_MEM['pc_retorno']
             self.pc = self.EX_MEM['novo_pc']
             self.IF_ID = {}
+            self.ID_EX = {}
             self.MEM_WB = {'tipo': 'J'}
 
         
@@ -278,9 +286,10 @@ class Simulador:
         print("Registradores:")
         for i in range(0, 32, 8):
             print("  " + "  ".join([f"x{j:<2}={self.bancoReg[j]:<5}" for j in range(i, i+8)]))
+        print("MEM_Dados:", self.memoria_dados)
         print("PC:", self.pc)
 
-    
+
     def executar(self):
         self.IF_ID = {}
         self.ID_EX = {}

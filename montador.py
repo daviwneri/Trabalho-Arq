@@ -198,7 +198,7 @@ class Montador:
             rs1, rs2 = reg(tokens[1]), reg(tokens[2])
 
             destino = imm(tokens[3])
-            offset = destino - (pc + 4)
+            offset = destino - pc
 
             if offset % 2 != 0:
                 raise ValueError(f"Offset de branch não alinhado para instrução {instr}")

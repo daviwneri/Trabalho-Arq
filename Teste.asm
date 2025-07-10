@@ -1,13 +1,33 @@
 .data
-valor: .word 20
+valor1: .word 15      # memória[0] = 15
+valor2: .word 27      # memória[4] = 27
+resultado: .word 0    # memória[8] = 0 (vai guardar resultado)
 
 .text
-    ADDI x1, x0, 10      # x1 = 10
-    ADDI x2, x0, 20      # x2 = 20
-    ADD x3, x1, x2       # x3 = x1 + x2 = 30
-    SW x3, 0(x0)         # Mem[0] = x3
-    LW x4, 0(x0)         # x4 = Mem[0] = 30
-    BEQ x3, x4, fim      # Salta para fim se iguais
-    ADDI x5, x0, 99      # (pulado se BEQ for tomado)
+    LW x1, 0(x0)         # x1 = valor1 (15)
+    LW x2, 4(x0)         # x2 = valor2 (27)
+
+    ADDI x0, x0, 0       # NOPE
+    ADDI x0, x0, 0       # NOPE
+
+    ADD x3, x1, x2       # x3 = x1 + x2 = 15 + 27 = 42
+
+    ADDI x0, x0, 0       # NOPE
+    ADDI x0, x0, 0       # NOPE
+
+    SW x3, 8(x0)         # resultado = x3 (42)
+
+    ADDI x4, x0, 42      # x4 = 42
+    BEQ x3, x4, iguais   # se x3 == 42, desvia para "iguais"
+
+    ADDI x5, x0, 0       # será pulado se BEQ for verdadeiro
+
+iguais:
+    ADDI x6, x0, 1       # x6 = 1 (indicador de sucesso)
+
+    JAL x0, fim          # pula para "fim"
+
+    ADDI x7, x0, 15       # será pulado
+
 fim:
-    ADDI x6, x0, 123     # x6 = 123
+    ADDI x10, x0, 99     # x10 = 99
