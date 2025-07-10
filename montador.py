@@ -196,7 +196,12 @@ class Montador:
                 raise ValueError(f"Formato inválido para {instr}: esperado RS1, RS2, LABEL")
             
             rs1, rs2 = reg(tokens[1]), reg(tokens[2])
-            offset = (imm(tokens[3]) - pc) & 0x1FFF
+
+            destino = imm(tokens[3])
+            offset = destino - (pc + 4)
+
+            if offset % 2 != 0:
+                raise ValueError(f"Offset de branch não alinhado para instrução {instr}")
             
             imm12 = (offset >> 12) & 0x1
             imm10_5 = (offset >> 5) & 0x3F
