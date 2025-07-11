@@ -311,5 +311,6 @@ class Simulador:
                 break
 
 
-sim = Simulador('Teste_data.bin', 'Teste_text.bin')
-sim.executar()
+if __name__ == "__main__":
+    sim = Simulador('Teste_data.bin', 'Teste_text.bin')
+    sim.executar()
