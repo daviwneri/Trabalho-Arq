@@ -7,7 +7,7 @@ class Simulador:
         self.memoria_dados = self.carregar_memoria(file_data)
         self.instrucoes = self.carregar_instrucoes(file_text)
         self.pc = 0 
-        self.ciclo = 1
+        self.ciclo = 0
 
         self.IF_ID = {}
         self.ID_EX = {}

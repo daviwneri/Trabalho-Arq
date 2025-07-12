@@ -182,10 +182,6 @@ class InterfaceSimuladorRISCV:
         
         ttk.Label(mem_control_frame, text="Mostrar endereços:").pack(side=tk.LEFT)
         
-        self.var_mostrar_todos = tk.BooleanVar()
-        ttk.Checkbutton(mem_control_frame, text="Mostrar todos os endereços", 
-                       variable=self.var_mostrar_todos, command=self.atualizar_memoria).pack(side=tk.LEFT, padx=10)
-        
         # Text widget para memória
         self.memoria_text = scrolledtext.ScrolledText(mem_frame, height=20, font=("Courier", 10))
         self.memoria_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -458,21 +454,14 @@ class InterfaceSimuladorRISCV:
             return
             
         self.memoria_text.delete(1.0, tk.END)
+    
+        # Mostrar apenas posições preenchidas
+        self.memoria_text.insert(tk.END, "Endereços de memória com dados:\n\n")
+        enderecos_ordenados = sorted(self.simulador.memoria_dados.keys())
         
-        if self.var_mostrar_todos.get():
-            # Mostrar todos os endereços (limitado para não sobrecarregar)
-            self.memoria_text.insert(tk.END, "Endereços de memória (primeiros 64 bytes):\n\n")
-            for i in range(0, min(64, len(self.simulador.memoria_dados) * 4), 4):
-                valor = self.simulador.memoria_dados.get(i, 0)
-                self.memoria_text.insert(tk.END, f"0x{i:08X}: 0x{valor:08X} ({valor})\n")
-        else:
-            # Mostrar apenas posições preenchidas
-            self.memoria_text.insert(tk.END, "Endereços de memória com dados:\n\n")
-            enderecos_ordenados = sorted(self.simulador.memoria_dados.keys())
-            
-            for endereco in enderecos_ordenados:
-                valor = self.simulador.memoria_dados[endereco]
-                self.memoria_text.insert(tk.END, f"0x{endereco:08X}: 0x{valor:08X} ({valor})\n")
+        for endereco in enderecos_ordenados:
+            valor = self.simulador.memoria_dados[endereco]
+            self.memoria_text.insert(tk.END, f"0x{endereco:08X}: 0x{valor:08X} ({valor})\n")
                 
         if not self.simulador.memoria_dados:
             self.memoria_text.insert(tk.END, "Nenhum dado na memória")
