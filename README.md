@@ -3,7 +3,7 @@
 1. Davi Wermelinger Neri Barbosa
 2. João Pedro da Silveira Fontinele
 3. Miguel Barros de Azevedo
-4. 
+4. Matheus de Lima Moura
 
 
 
@@ -13,7 +13,7 @@
 
 1. **Abra o terminal/prompt de comando**
 
-2. **Navegue até o diretório do projeto**
+2. **Abra o diretório do projeto**
 
 3. **Execute a interface gráfica**
    
