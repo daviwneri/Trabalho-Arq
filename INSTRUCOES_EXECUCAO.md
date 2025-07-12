@@ -5,9 +5,6 @@
 1. **Abra o terminal/prompt de comando**
 
 2. **Navegue até o diretório do projeto**
-   ```bash
-   cd "c:\Users\jpfon\OneDrive\Documentos\Trabalho-Arq"
-   ```
 
 3. **Execute a interface gráfica**
    

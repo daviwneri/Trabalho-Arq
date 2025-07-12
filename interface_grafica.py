@@ -17,6 +17,7 @@ class InterfaceSimuladorRISCV:
         self.arquivo_asm = None
         self.executando = False
         self.arquivo_saida = None
+        self.wb_buffer = {}  # Buffer para rastrear o que está no estágio WB
         
         # Configurar interface
         self.setup_interface()
@@ -230,6 +231,7 @@ class InterfaceSimuladorRISCV:
                 text_file = f"{base_name}_text.bin"
                 
                 self.simulador = Simulador(data_file, text_file)
+                self.wb_buffer = {}  # Inicializar buffer do WB
                 
                 # Habilitar botões
                 self.btn_executar.config(state=tk.NORMAL)
@@ -255,8 +257,8 @@ class InterfaceSimuladorRISCV:
             return
             
         try:
-            # Salvar estado antes da execução
-            estado_anterior = self.capturar_estado_pipeline()
+            # Capturar o que estava em MEM_WB antes da execução (isso irá para WB)
+            self.wb_buffer = self.simulador.MEM_WB.copy() if self.simulador.MEM_WB else {}
             
             # Executar um ciclo
             self.simulador.executar_ciclo()
@@ -310,6 +312,7 @@ class InterfaceSimuladorRISCV:
                 text_file = f"{base_name}_text.bin"
                 
                 self.simulador = Simulador(data_file, text_file)
+                self.wb_buffer = {}  # Limpar o buffer do WB
                 self.atualizar_interface()
                 
                 self.btn_executar.config(state=tk.NORMAL)
@@ -337,11 +340,15 @@ class InterfaceSimuladorRISCV:
         if not self.simulador:
             return {}
             
+        # Antes de executar o ciclo, salvar o que estava em MEM_WB como o atual WB
+        self.wb_buffer = self.simulador.MEM_WB.copy() if self.simulador.MEM_WB else {}
+            
         return {
             'IF_ID': self.simulador.IF_ID.copy(),
             'ID_EX': self.simulador.ID_EX.copy(),
             'EX_MEM': self.simulador.EX_MEM.copy(),
             'MEM_WB': self.simulador.MEM_WB.copy(),
+            'WB': self.wb_buffer.copy(),
             'pc': self.simulador.pc,
             'ciclo': self.simulador.ciclo
         }
@@ -374,7 +381,7 @@ class InterfaceSimuladorRISCV:
             'ID': self.simulador.ID_EX,
             'EX': self.simulador.EX_MEM,
             'MEM': self.simulador.MEM_WB,
-            'WB': {}  # WB não tem dados persistentes
+            'WB': self.wb_buffer  # Usar o buffer para mostrar o que está sendo processado no WB
         }
         
         for stage, data in stage_data.items():
@@ -413,11 +420,20 @@ class InterfaceSimuladorRISCV:
                 if 'resultado' in data:
                     widget.insert(tk.END, f"Dados: {data['resultado']}\n")
                     
-            elif stage == 'WB':
-                widget.insert(tk.END, "Operação de write-back\nconcluída no ciclo anterior")
+            elif stage == 'WB' and data:
+                widget.insert(tk.END, f"Tipo: {data.get('tipo', 'N/A')}\n")
+                if 'rd' in data and data.get('rd', 0) != 0:
+                    widget.insert(tk.END, f"Escrevendo em x{data['rd']}\n")
+                if 'resultado' in data:
+                    widget.insert(tk.END, f"Valor: {data['resultado']}\n")
+                else:
+                    widget.insert(tk.END, "Nenhuma escrita\n(instrução tipo S/B)")
                 
-            if not data and stage != 'WB':
-                widget.insert(tk.END, "Nenhuma instrução\nno estágio")
+            if not data:
+                if stage == 'WB':
+                    widget.insert(tk.END, "Nenhuma operação\nde write-back")
+                else:
+                    widget.insert(tk.END, "Nenhuma instrução\nno estágio")
                 
             widget.config(state=tk.DISABLED)
             
@@ -508,7 +524,7 @@ class InterfaceSimuladorRISCV:
             'ID': self.simulador.ID_EX, 
             'EX': self.simulador.EX_MEM,
             'MEM': self.simulador.MEM_WB,
-            'WB': {}
+            'WB': self.wb_buffer
         }
         
         data = stage_data.get(stage, {})
@@ -518,6 +534,12 @@ class InterfaceSimuladorRISCV:
             
         if stage == 'IF':
             return f"0x{data.get('instrucao', 0):08X} (PC: 0x{data.get('pc', 0):08X})"
+        elif stage == 'WB':
+            tipo = data.get('tipo', '')
+            if 'rd' in data and data.get('rd', 0) != 0:
+                return f"{tipo} -> x{data['rd']}"
+            else:
+                return f"{tipo} (sem write-back)"
         elif 'tipo' in data:
             return f"{data['tipo']}"
         else:
