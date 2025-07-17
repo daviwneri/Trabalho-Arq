@@ -4,7 +4,12 @@ class Simulador:
 
     def __init__ (self, file_data, file_text):
         self.bancoReg = [0]*32
-        self.memoria_dados = self.carregar_memoria(file_data)
+
+        if file_data is not None:
+            self.memoria_dados = self.carregar_memoria(file_data)
+        else:
+            self.memoria_dados = {} 
+
         self.instrucoes = self.carregar_instrucoes(file_text)
         self.pc = 0 
         self.ciclo = 0
@@ -311,6 +316,3 @@ class Simulador:
                 break
 
 
-if __name__ == "__main__":
-    sim = Simulador('Teste_data.bin', 'Teste_text.bin')
-    sim.executar()

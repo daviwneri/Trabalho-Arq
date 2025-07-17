@@ -33,8 +33,8 @@
    ```
 
 4. **Na interface que abrir:**
-   - Clique em "Carregar Arquivo" ou use o menu "Arquivo > Abrir arquivo .asm"
-   - Selecione o arquivo `Teste.asm` (ou outro arquivo assembly)
+   - Clique em "Carregar Arquivo"
+   - Selecione o arquivo `Teste.asm` (ou outro arquivo assembly ou binário)
    - Use os botões para controlar a execução:
      - "Executar Próximo Ciclo" - executa um ciclo por vez
      - "Executar Tudo" - executa o programa completo
@@ -110,7 +110,7 @@ Este projeto implementa um simulador completo do processador RISC-V com pipeline
 ## Funcionalidades da Interface
 
 ### 1. Carregamento de Arquivos
-- Carrega arquivos `.asm` 
+- Carrega arquivos `.asm` ou  `.bin`
 - Monta automaticamente o código assembly
 - Inicializa o simulador
 

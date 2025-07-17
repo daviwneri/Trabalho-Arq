@@ -274,15 +274,3 @@ class Montador:
 
         return memoria_data, memoria_text
 
-if __name__ == '__main__':
-    import sys
-    if len(sys.argv) < 2:
-        print("Uso: python montador.py entrada.asm [saida_base]")
-        sys.exit(1)
-    montador = Montador()
-    try:
-        montador.montar(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else None)
-        print("Montagem concluída com sucesso!")
-    except Exception as e:
-        print(f"Erro durante a montagem: {str(e)}")
-        sys.exit(1)
