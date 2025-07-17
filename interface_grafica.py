@@ -15,6 +15,7 @@ class InterfaceSimuladorRISCV:
         self.simulador = None
         self.montador = Montador()
         self.arquivo_asm = None
+        self.arquivo_bin = None
         self.executando = False
         self.arquivo_saida = None
         self.wb_buffer = {}  # Buffer para rastrear o que está no estágio WB
@@ -206,29 +207,37 @@ class InterfaceSimuladorRISCV:
         self.log_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
     def abrir_arquivo(self):
-        """Abre um arquivo .asm"""
         arquivo = filedialog.askopenfilename(
-            title="Selecionar arquivo Assembly",
+            title="Selecionar arquivo Assembly ou binário",
             filetypes=[("Assembly files", "*.asm"), ("All files", "*.*")]
         )
         
         if arquivo:
-            self.arquivo_asm = arquivo
+            if arquivo.endswith('.asm'):
+                self.arquivo_asm = arquivo
+            elif arquivo.endswith('.bin'):
+                self.arquivo_bin = arquivo
+
             self.lbl_arquivo.config(text=os.path.basename(arquivo), foreground="black")
             self.status_bar.config(text=f"Arquivo carregado: {os.path.basename(arquivo)}")
             
             # Montar o arquivo
             try:
-                base_name = arquivo.rsplit('.', 1)[0]
-                self.montador.montar(arquivo, base_name)
-                
-                # Inicializar simulador
-                data_file = f"{base_name}_data.bin"
-                text_file = f"{base_name}_text.bin"
-                
-                self.simulador = Simulador(data_file, text_file)
-                self.wb_buffer = {}  # Inicializar buffer do WB
-                
+                if self.arquivo_asm:
+                    base_name = arquivo.rsplit('.', 1)[0]
+                    self.montador.montar(arquivo, base_name)
+                    
+                    # Inicializar simulador
+                    data_file = f"{base_name}_data.bin"
+                    text_file = f"{base_name}_text.bin"
+                    
+                    self.simulador = Simulador(data_file, text_file)
+                    self.wb_buffer = {}  # Inicializar buffer do WB
+
+                elif self.arquivo_bin:
+                    base_name = os.path.basename(arquivo)
+                    self.simulador = Simulador(None, base_name)
+                    
                 # Habilitar botões
                 self.btn_executar.config(state=tk.NORMAL)
                 self.btn_executar_tudo.config(state=tk.NORMAL)
