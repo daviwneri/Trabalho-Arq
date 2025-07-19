@@ -5,6 +5,54 @@
 3. Miguel Barros de Azevedo
 4. Matheus de Lima Moura
 
+# ⭐ FUNCIONALIDADES EXTRAS IMPLEMENTADAS ⭐
+
+Este simulador implementa as seguintes funcionalidades extras opcionais:
+
+## a) 🎯 Previsão de Desvio de 2 bits
+- Preditor baseado em contador saturante de 2 bits por PC
+- Flush do pipeline em caso de previsão incorreta
+- Estados: Strongly/Weakly Not Taken, Weakly/Strongly Taken
+- **Ativa/desativa via interface gráfica ou linha de comando**
+
+## b) ⚡ Forwarding (Bypass)
+- EX-EX forwarding (EX/MEM → EX)
+- MEM-EX forwarding (MEM/WB → EX)
+- Resolve hazards RAW sem inserir stalls
+- Load-use hazards ainda causam 1 ciclo de stall (necessário)
+- **Ativa/desativa via interface gráfica ou linha de comando**
+
+## c) 🛡️ Detecção de Hazards de Dados
+- Detecta hazards RAW (Read After Write)
+- Insere stalls automáticos quando necessário
+- Funciona em conjunto com forwarding ou independentemente
+- **Ativa/desativa via interface gráfica ou linha de comando**
+
+### Como Usar as Funcionalidades Extras:
+
+#### Interface Gráfica:
+1. Execute `python interface_grafica.py`
+2. Use o menu "Configurações" ou os checkboxes na interface
+3. Carregue um arquivo (ex: `Teste_Extras.asm`)
+4. Observe as estatísticas na aba "Estatísticas Extras"
+
+#### Script de Demonstração:
+```bash
+python demonstrar_extras.py
+```
+
+#### Programaticamente:
+```python
+opcoes_extras = {
+    'previsao_desvio': True,
+    'forwarding': True,
+    'deteccao_hazards': True
+}
+simulador = Simulador(data_file, text_file, opcoes_extras)
+```
+
+📖 **Ver `README_EXTRAS.md` para documentação completa das funcionalidades extras.**
+
 
 
 # Como Executar a Interface Gráfica ------------------------------------------------------------------
@@ -32,19 +80,51 @@
    python executar_interface.py
    ```
 
-4. **Na interface que abrir:**
+4. **Configure as funcionalidades extras (NOVO!):**
+   - Use o menu "Configurações" ou os checkboxes na interface
+   - Marque funcionalidades desejadas:
+     - ✅ **Previsão de Desvio**: Preditor de 2 bits com flush
+     - ✅ **Forwarding**: Bypass para resolver hazards RAW
+     - ✅ **Detecção de Hazards**: Inserção automática de stalls
+
+5. **Na interface que abrir:**
    - Clique em "Carregar Arquivo"
-   - Selecione o arquivo `Teste.asm` (ou outro arquivo assembly ou binário)
+   - Selecione o arquivo `Teste.asm` (exemplo básico) ou `Teste_Extras.asm` (testa funcionalidades extras)
    - Use os botões para controlar a execução:
      - "Executar Próximo Ciclo" - executa um ciclo por vez
      - "Executar Tudo" - executa o programa completo
      - "Reset" - reinicia a execução
 
-5. **Explore as abas:**
+6. **Explore as abas:**
    - **Pipeline**: Veja o estado de cada estágio (IF, ID, EX, MEM, WB)
    - **Registradores**: Estado dos 32 registradores
    - **Memória**: Conteúdo da memória
    - **Log de Execução**: Histórico detalhado da execução
+   - **Estatísticas Extras**: Métricas das funcionalidades extras (NOVO!)
+
+## Alternativa: Linha de Comando
+
+```bash
+# Simulação básica
+python simulador_cli.py Teste_Extras.asm --estatisticas
+
+# Com todas as funcionalidades extras
+python simulador_cli.py Teste_Extras.asm --previsao-desvio --forwarding --deteccao-hazards --estatisticas
+
+# Execução detalhada
+python simulador_cli.py Teste.asm --forwarding --detalhado
+
+# Ver todas as opções
+python simulador_cli.py --help
+```
+
+## Demonstração das Funcionalidades Extras
+
+```bash
+python demonstrar_extras.py
+```
+
+Este script compara automaticamente 6 configurações diferentes e mostra o impacto de cada funcionalidade.
 
 ## Resolução de Problemas
 

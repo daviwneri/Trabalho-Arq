@@ -8,8 +8,8 @@ from simulador import Simulador
 class InterfaceSimuladorRISCV:
     def __init__(self, root):
         self.root = root
-        self.root.title("Simulador RISC-V com Pipeline")
-        self.root.geometry("1400x900")
+        self.root.title("Simulador RISC-V com Pipeline - Funcionalidades Extras")
+        self.root.geometry("1500x1000")
         
         # Estado do simulador
         self.simulador = None
@@ -19,6 +19,11 @@ class InterfaceSimuladorRISCV:
         self.executando = False
         self.arquivo_saida = None
         self.wb_buffer = {}  # Buffer para rastrear o que está no estágio WB
+        
+        # Variáveis para funcionalidades extras
+        self.var_previsao_desvio = tk.BooleanVar(value=False)
+        self.var_forwarding = tk.BooleanVar(value=False)
+        self.var_deteccao_hazards = tk.BooleanVar(value=False)
         
         # Configurar interface
         self.setup_interface()
@@ -34,6 +39,13 @@ class InterfaceSimuladorRISCV:
         file_menu.add_separator()
         file_menu.add_command(label="Sair", command=self.root.quit)
         
+        # Menu de configurações
+        config_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Configurações", menu=config_menu)
+        config_menu.add_checkbutton(label="Previsão de Desvio", variable=self.var_previsao_desvio, command=self.atualizar_configuracoes)
+        config_menu.add_checkbutton(label="Forwarding", variable=self.var_forwarding, command=self.atualizar_configuracoes)
+        config_menu.add_checkbutton(label="Detecção de Hazards", variable=self.var_deteccao_hazards, command=self.atualizar_configuracoes)
+        
         # Frame principal
         main_frame = ttk.Frame(self.root)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -41,6 +53,26 @@ class InterfaceSimuladorRISCV:
         # Frame superior - controles
         control_frame = ttk.LabelFrame(main_frame, text="Controles", padding=10)
         control_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        # Frame para funcionalidades extras
+        extras_frame = ttk.LabelFrame(control_frame, text="Funcionalidades Extras", padding=5)
+        extras_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        # Checkboxes para funcionalidades extras
+        cb_frame = ttk.Frame(extras_frame)
+        cb_frame.pack(fill=tk.X)
+        
+        self.cb_previsao = ttk.Checkbutton(cb_frame, text="Previsão de Desvio (2 bits)", 
+                                          variable=self.var_previsao_desvio, command=self.atualizar_configuracoes)
+        self.cb_previsao.pack(side=tk.LEFT, padx=(0, 20))
+        
+        self.cb_forwarding = ttk.Checkbutton(cb_frame, text="Forwarding", 
+                                            variable=self.var_forwarding, command=self.atualizar_configuracoes)
+        self.cb_forwarding.pack(side=tk.LEFT, padx=(0, 20))
+        
+        self.cb_hazards = ttk.Checkbutton(cb_frame, text="Detecção de Hazards", 
+                                         variable=self.var_deteccao_hazards, command=self.atualizar_configuracoes)
+        self.cb_hazards.pack(side=tk.LEFT, padx=(0, 20))
         
         # Botões de controle
         btn_frame = ttk.Frame(control_frame)
@@ -86,6 +118,9 @@ class InterfaceSimuladorRISCV:
         
         # Aba 4: Log de Execução
         self.setup_log_tab()
+        
+        # Aba 5: Estatísticas Extras
+        self.setup_estatisticas_tab()
         
         # Status bar
         self.status_bar = ttk.Label(self.root, text="Pronto", relief=tk.SUNKEN, anchor=tk.W)
@@ -220,6 +255,96 @@ class InterfaceSimuladorRISCV:
         self.log_text = scrolledtext.ScrolledText(log_frame, height=25, font=("Courier", 9))
         self.log_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
+    def setup_estatisticas_tab(self):
+        # Aba Estatísticas das Funcionalidades Extras
+        stats_frame = ttk.Frame(self.notebook)
+        self.notebook.add(stats_frame, text="Estatísticas Extras")
+        
+        # Título
+        ttk.Label(stats_frame, text="Estatísticas das Funcionalidades Extras", 
+                 font=("Arial", 14, "bold")).pack(pady=10)
+        
+        # Frame principal para as estatísticas
+        main_stats_frame = ttk.Frame(stats_frame)
+        main_stats_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+        
+        # Frame para previsão de desvio
+        pred_frame = ttk.LabelFrame(main_stats_frame, text="Previsão de Desvio de 2 bits", padding=10)
+        pred_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        # Labels para estatísticas de previsão
+        self.lbl_pred_status = ttk.Label(pred_frame, text="Status: DESABILITADA", font=("Arial", 10, "bold"))
+        self.lbl_pred_status.pack(anchor=tk.W)
+        
+        self.lbl_pred_corretos = ttk.Label(pred_frame, text="Previsões corretas: 0")
+        self.lbl_pred_corretos.pack(anchor=tk.W)
+        
+        self.lbl_pred_incorretos = ttk.Label(pred_frame, text="Previsões incorretas: 0")
+        self.lbl_pred_incorretos.pack(anchor=tk.W)
+        
+        self.lbl_pred_taxa = ttk.Label(pred_frame, text="Taxa de acerto: 0.0%")
+        self.lbl_pred_taxa.pack(anchor=tk.W)
+        
+        # Frame para forwarding
+        fwd_frame = ttk.LabelFrame(main_stats_frame, text="Forwarding", padding=10)
+        fwd_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        self.lbl_fwd_status = ttk.Label(fwd_frame, text="Status: DESABILITADO", font=("Arial", 10, "bold"))
+        self.lbl_fwd_status.pack(anchor=tk.W)
+        
+        self.lbl_fwd_realizados = ttk.Label(fwd_frame, text="Forwards realizados: 0")
+        self.lbl_fwd_realizados.pack(anchor=tk.W)
+        
+        # Frame para detecção de hazards
+        haz_frame = ttk.LabelFrame(main_stats_frame, text="Detecção de Hazards", padding=10)
+        haz_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        self.lbl_haz_status = ttk.Label(haz_frame, text="Status: DESABILITADA", font=("Arial", 10, "bold"))
+        self.lbl_haz_status.pack(anchor=tk.W)
+        
+        self.lbl_haz_stalls = ttk.Label(haz_frame, text="Stalls por hazard: 0")
+        self.lbl_haz_stalls.pack(anchor=tk.W)
+        
+        # Frame para tabela de previsão
+        table_frame = ttk.LabelFrame(main_stats_frame, text="Tabela de Previsão de Desvios", padding=10)
+        table_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+        
+        # TreeView para tabela de previsão
+        columns = ('PC', 'Estado', 'Descrição')
+        self.pred_table = ttk.Treeview(table_frame, columns=columns, show='headings', height=10)
+        
+        # Configurar colunas
+        self.pred_table.heading('PC', text='PC (Hex)')
+        self.pred_table.heading('Estado', text='Estado')
+        self.pred_table.heading('Descrição', text='Descrição')
+        
+        self.pred_table.column('PC', width=120)
+        self.pred_table.column('Estado', width=80)
+        self.pred_table.column('Descrição', width=200)
+        
+        # Scrollbar para tabela
+        table_scroll = ttk.Scrollbar(table_frame, orient=tk.VERTICAL, command=self.pred_table.yview)
+        self.pred_table.configure(yscrollcommand=table_scroll.set)
+        
+        self.pred_table.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        table_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        
+    def atualizar_configuracoes(self):
+        """Atualiza as configurações das funcionalidades extras no simulador"""
+        if self.simulador:
+            self.simulador.previsao_desvio_habilitada = self.var_previsao_desvio.get()
+            self.simulador.forwarding_habilitado = self.var_forwarding.get()
+            self.simulador.deteccao_hazards_habilitada = self.var_deteccao_hazards.get()
+            
+            # Reset estatísticas
+            self.simulador.desvios_corretos = 0
+            self.simulador.desvios_incorretos = 0
+            self.simulador.stalls_por_hazard = 0
+            self.simulador.forwards_realizados = 0
+            
+            self.log(f"Configurações atualizadas: Previsão={self.var_previsao_desvio.get()}, "
+                    f"Forwarding={self.var_forwarding.get()}, Hazards={self.var_deteccao_hazards.get()}")
+    
     def abrir_arquivo(self):
         arquivo = filedialog.askopenfilename(
             title="Selecionar arquivo Assembly ou binário",
@@ -241,11 +366,17 @@ class InterfaceSimuladorRISCV:
                     base_name = arquivo.rsplit('.', 1)[0]
                     self.montador.montar(arquivo, base_name)
                     
-                    # Inicializar simulador
+                    # Inicializar simulador com opções extras
                     data_file = f"{base_name}_data.bin"
                     text_file = f"{base_name}_text.bin"
                     
-                    self.simulador = Simulador(data_file, text_file)
+                    opcoes_extras = {
+                        'previsao_desvio': self.var_previsao_desvio.get(),
+                        'forwarding': self.var_forwarding.get(),
+                        'deteccao_hazards': self.var_deteccao_hazards.get()
+                    }
+                    
+                    self.simulador = Simulador(data_file, text_file, opcoes_extras)
                     self.wb_buffer = {}  # Inicializar buffer do WB
 
                 elif self.arquivo_bin:
@@ -391,6 +522,9 @@ class InterfaceSimuladorRISCV:
         
         # Atualizar memória
         self.atualizar_memoria()
+        
+        # Atualizar estatísticas das funcionalidades extras
+        self.atualizar_estatisticas_extras()
         
     def atualizar_pipeline(self):
         """Atualiza a visualização do pipeline"""
@@ -590,6 +724,58 @@ class InterfaceSimuladorRISCV:
         if not self.simulador.memoria_dados:
             self.memoria_text.insert(tk.END, "Nenhum dado na memória")
             
+    def atualizar_estatisticas_extras(self):
+        """Atualiza as estatísticas das funcionalidades extras"""
+        if not self.simulador:
+            return
+            
+        stats = self.simulador.obter_estatisticas()
+        
+        # Previsão de desvio
+        pred_stats = stats['previsao_desvio']
+        status_pred = "HABILITADA" if pred_stats['habilitada'] else "DESABILITADA"
+        self.lbl_pred_status.config(text=f"Status: {status_pred}")
+        self.lbl_pred_corretos.config(text=f"Previsões corretas: {pred_stats['desvios_corretos']}")
+        self.lbl_pred_incorretos.config(text=f"Previsões incorretas: {pred_stats['desvios_incorretos']}")
+        self.lbl_pred_taxa.config(text=f"Taxa de acerto: {pred_stats['taxa_acerto']:.1f}%")
+        
+        # Forwarding
+        fwd_stats = stats['forwarding']
+        status_fwd = "HABILITADO" if fwd_stats['habilitado'] else "DESABILITADO"
+        self.lbl_fwd_status.config(text=f"Status: {status_fwd}")
+        self.lbl_fwd_realizados.config(text=f"Forwards realizados: {fwd_stats['forwards_realizados']}")
+        
+        # Detecção de hazards
+        haz_stats = stats['hazards']
+        status_haz = "HABILITADA" if haz_stats['deteccao_habilitada'] else "DESABILITADA"
+        self.lbl_haz_status.config(text=f"Status: {status_haz}")
+        self.lbl_haz_stalls.config(text=f"Stalls por hazard: {haz_stats['stalls_por_hazard']}")
+        
+        # Atualizar tabela de previsão
+        self.atualizar_tabela_previsao()
+        
+    def atualizar_tabela_previsao(self):
+        """Atualiza a tabela de previsão de desvios"""
+        if not self.simulador:
+            return
+            
+        # Limpar tabela
+        for item in self.pred_table.get_children():
+            self.pred_table.delete(item)
+            
+        # Adicionar entradas da tabela de previsão
+        if hasattr(self.simulador, 'tabela_previsao'):
+            for pc, estado in self.simulador.tabela_previsao.items():
+                descricoes = {
+                    0: "Strongly Not Taken",
+                    1: "Weakly Not Taken", 
+                    2: "Weakly Taken",
+                    3: "Strongly Taken"
+                }
+                
+                descricao = descricoes.get(estado, "Desconhecido")
+                self.pred_table.insert('', 'end', values=(f"0x{pc:08X}", estado, descricao))
+            
     def log_ciclo(self):
         """Registra informações do ciclo atual no log e arquivo"""
         if not self.simulador:
@@ -619,6 +805,21 @@ class InterfaceSimuladorRISCV:
         for endereco in sorted(self.simulador.memoria_dados.keys()):
             valor = self.simulador.memoria_dados[endereco]
             log_msg += f"  0x{endereco:08X}: 0x{valor:08X}\n"
+            
+        # Informações das funcionalidades extras
+        if hasattr(self.simulador, 'obter_estatisticas'):
+            stats = self.simulador.obter_estatisticas()
+            
+            # Se há atividade relevante, incluir no log
+            if (stats['previsao_desvio']['habilitada'] and 
+                (stats['previsao_desvio']['desvios_corretos'] > 0 or stats['previsao_desvio']['desvios_incorretos'] > 0)):
+                log_msg += f"\nPrevisão de Desvio: {stats['previsao_desvio']['desvios_corretos']} corretas, {stats['previsao_desvio']['desvios_incorretos']} incorretas\n"
+                
+            if stats['forwarding']['habilitado'] and stats['forwarding']['forwards_realizados'] > 0:
+                log_msg += f"Forwards realizados: {stats['forwarding']['forwards_realizados']}\n"
+                
+            if stats['hazards']['deteccao_habilitada'] and stats['hazards']['stalls_por_hazard'] > 0:
+                log_msg += f"Stalls por hazard: {stats['hazards']['stalls_por_hazard']}\n"
             
         self.log(log_msg)
         
