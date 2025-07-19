@@ -117,11 +117,25 @@ class InterfaceSimuladorRISCV:
             stage_frame = ttk.LabelFrame(stages_frame, text=f"{stage} - {description}", padding=10)
             stage_frame.pack(fill=tk.BOTH, expand=True, pady=5)
             
-            # Widget de texto para mostrar a instrução
-            text_widget = tk.Text(stage_frame, height=4, width=50, wrap=tk.WORD, state=tk.DISABLED)
-            text_widget.pack(fill=tk.BOTH, expand=True)
+            # Frame interno para organizar conteúdo e instrução assembly
+            content_frame = ttk.Frame(stage_frame)
+            content_frame.pack(fill=tk.BOTH, expand=True)
             
-            self.stage_widgets[stage] = text_widget
+            # Widget de texto para mostrar a instrução (lado esquerdo)
+            text_widget = tk.Text(content_frame, height=4, width=35, wrap=tk.WORD, state=tk.DISABLED)
+            text_widget.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+            
+            # Label para instrução assembly (lado direito)
+            assembly_frame = ttk.Frame(content_frame)
+            assembly_frame.pack(side=tk.RIGHT, fill=tk.Y, padx=(10, 0))
+            
+            ttk.Label(assembly_frame, text="Instrução:", font=("Arial", 9, "bold")).pack(anchor=tk.W)
+            assembly_label = tk.Label(assembly_frame, text="", font=("Courier", 10), 
+                                    justify=tk.LEFT, anchor=tk.W, wraplength=200,
+                                    relief=tk.SUNKEN, bg="lightgray", padx=5, pady=5)
+            assembly_label.pack(fill=tk.BOTH, expand=True)
+            
+            self.stage_widgets[stage] = {'text': text_widget, 'assembly': assembly_label}
             
     def setup_registradores_tab(self):
         # Aba Registradores
@@ -317,7 +331,7 @@ class InterfaceSimuladorRISCV:
                 text_file = f"{base_name}_text.bin"
                 
                 self.simulador = Simulador(data_file, text_file)
-                self.wb_buffer = {}  # Limpar o buffer do WB
+                self.wb_buffer = {}  
                 self.atualizar_interface()
                 
                 self.btn_executar.config(state=tk.NORMAL)
@@ -328,7 +342,24 @@ class InterfaceSimuladorRISCV:
                 
             except Exception as e:
                 messagebox.showerror("Erro", f"Erro ao resetar: {str(e)}")
+
+        elif self.arquivo_bin:
+            try:
+                text_file = os.path.basename(self.arquivo_bin)
                 
+                self.simulador = Simulador(None, text_file)
+                self.wb_buffer = {}  
+                self.atualizar_interface()
+                
+                self.btn_executar.config(state=tk.NORMAL)
+                self.btn_executar_tudo.config(state=tk.NORMAL)
+                
+                self.status_bar.config(text="Simulador resetado")
+                self.log("=== SIMULADOR RESETADO ===")
+                
+            except Exception as e:
+                messagebox.showerror("Erro", f"Erro ao resetar: {str(e)}")
+
     def simulador_terminou(self):
         """Verifica se o simulador terminou a execução"""
         if not self.simulador:
@@ -390,57 +421,155 @@ class InterfaceSimuladorRISCV:
         }
         
         for stage, data in stage_data.items():
-            widget = self.stage_widgets[stage]
-            widget.config(state=tk.NORMAL)
-            widget.delete(1.0, tk.END)
+            widgets = self.stage_widgets[stage]
+            text_widget = widgets['text']
+            assembly_label = widgets['assembly']
+            
+            # Atualizar widget de texto
+            text_widget.config(state=tk.NORMAL)
+            text_widget.delete(1.0, tk.END)
+            
+            # Atualizar instrução assembly
+            assembly_text = ""
             
             if stage == 'IF' and data:
                 instrucao_hex = f"0x{data['instrucao']:08X}"
                 pc_hex = f"0x{data['pc']:08X}"
-                widget.insert(tk.END, f"PC: {pc_hex}\nInstrução: {instrucao_hex}\n")
-                widget.insert(tk.END, f"Binário: {data['instrucao']:032b}")
+                text_widget.insert(tk.END, f"PC: {pc_hex}\nInstrução: {instrucao_hex}\n")
+                text_widget.insert(tk.END, f"Binário: {data['instrucao']:032b}")
+                # Para IF, precisamos decodificar a instrução para mostrar o assembly
+                assembly_text = self.decodificar_instrucao_raw(data['instrucao'])
                 
             elif stage == 'ID' and data:
-                widget.insert(tk.END, f"Tipo: {data.get('tipo', 'N/A')}\n")
+                text_widget.insert(tk.END, f"Tipo: {data.get('tipo', 'N/A')}\n")
                 if 'rd' in data:
-                    widget.insert(tk.END, f"RD: x{data['rd']}\n")
+                    text_widget.insert(tk.END, f"RD: x{data['rd']}\n")
                 if 'rs1' in data:
-                    widget.insert(tk.END, f"RS1: x{data['rs1']}\n")
+                    text_widget.insert(tk.END, f"RS1: x{data['rs1']}\n")
                 if 'rs2' in data:
-                    widget.insert(tk.END, f"RS2: x{data['rs2']}\n")
+                    text_widget.insert(tk.END, f"RS2: x{data['rs2']}\n")
                 if 'imm' in data:
-                    widget.insert(tk.END, f"IMM: {data['imm']}")
+                    text_widget.insert(tk.END, f"IMM: {data['imm']}")
+                assembly_text = self.simulador.instrucao_para_assembly(data)
                     
             elif stage == 'EX' and data:
-                widget.insert(tk.END, f"Tipo: {data.get('tipo', 'N/A')}\n")
+                text_widget.insert(tk.END, f"Tipo: {data.get('tipo', 'N/A')}\n")
                 if 'resultado' in data:
-                    widget.insert(tk.END, f"Resultado: {data['resultado']}\n")
+                    text_widget.insert(tk.END, f"Resultado: {data['resultado']}\n")
                 if 'endereco' in data:
-                    widget.insert(tk.END, f"Endereço: 0x{data['endereco']:08X}\n")
+                    text_widget.insert(tk.END, f"Endereço: 0x{data['endereco']:08X}\n")
                 if 'desvia' in data:
-                    widget.insert(tk.END, f"Desvia: {data['desvia']}\n")
+                    text_widget.insert(tk.END, f"Desvia: {data['desvia']}\n")
+                assembly_text = self.simulador.instrucao_para_assembly(data)
                     
             elif stage == 'MEM' and data:
-                widget.insert(tk.END, f"Tipo: {data.get('tipo', 'N/A')}\n")
+                text_widget.insert(tk.END, f"Tipo: {data.get('tipo', 'N/A')}\n")
                 if 'resultado' in data:
-                    widget.insert(tk.END, f"Dados: {data['resultado']}\n")
+                    text_widget.insert(tk.END, f"Dados: {data['resultado']}\n")
+                assembly_text = self.simulador.instrucao_para_assembly(data)
                     
             elif stage == 'WB' and data:
-                widget.insert(tk.END, f"Tipo: {data.get('tipo', 'N/A')}\n")
+                text_widget.insert(tk.END, f"Tipo: {data.get('tipo', 'N/A')}\n")
                 if 'rd' in data and data.get('rd', 0) != 0:
-                    widget.insert(tk.END, f"Escrevendo em x{data['rd']}\n")
+                    text_widget.insert(tk.END, f"Escrevendo em x{data['rd']}\n")
                 if 'resultado' in data:
-                    widget.insert(tk.END, f"Valor: {data['resultado']}\n")
+                    text_widget.insert(tk.END, f"Valor: {data['resultado']}\n")
                 else:
-                    widget.insert(tk.END, "Nenhuma escrita\n(instrução tipo S/B)")
+                    text_widget.insert(tk.END, "Nenhuma escrita\n(instrução tipo S/B)")
+                assembly_text = self.simulador.instrucao_para_assembly(data)
                 
             if not data:
                 if stage == 'WB':
-                    widget.insert(tk.END, "Nenhuma operação\nde write-back")
+                    text_widget.insert(tk.END, "Nenhuma instrução\nde write-back")
                 else:
-                    widget.insert(tk.END, "Nenhuma instrução\nno estágio")
+                    text_widget.insert(tk.END, "Nenhuma instrução\nno estágio")
+                assembly_text = ""
                 
-            widget.config(state=tk.DISABLED)
+            text_widget.config(state=tk.DISABLED)
+            
+            # Atualizar label da instrução assembly
+            assembly_label.config(text=assembly_text if assembly_text else "---")
+            
+    def decodificar_instrucao_raw(self, instr):
+        """Decodifica uma instrução raw para formato assembly (para estágio IF)"""
+        opcode = instr & 0x7F
+        
+        if opcode == 0b0110011:  # Tipo R
+            rd = (instr >> 7) & 0x1F
+            funct3 = (instr >> 12) & 0x7
+            rs1 = (instr >> 15) & 0x1F
+            rs2 = (instr >> 20) & 0x1F
+            funct7 = (instr >> 25) & 0x7F
+            
+            if funct3 == 0 and funct7 == 0:
+                return f"ADD x{rd}, x{rs1}, x{rs2}"
+            elif funct3 == 0 and funct7 == 32:
+                return f"SUB x{rd}, x{rs1}, x{rs2}"
+            elif funct3 == 7:
+                return f"AND x{rd}, x{rs1}, x{rs2}"
+            elif funct3 == 6:
+                return f"OR x{rd}, x{rs1}, x{rs2}"
+            else:
+                return f"R-type x{rd}, x{rs1}, x{rs2}"
+                
+        elif opcode == 0b0010011:  # Tipo I
+            rd = (instr >> 7) & 0x1F
+            funct3 = (instr >> 12) & 0x7
+            rs1 = (instr >> 15) & 0x1F
+            imm = (instr >> 20) & 0xFFF
+            imm = imm - 4096 if imm & 0x800 else imm
+            
+            if funct3 == 0:
+                return f"ADDI x{rd}, x{rs1}, {imm}"
+            else:
+                return f"I-type x{rd}, x{rs1}, {imm}"
+                
+        elif opcode == 0b0000011:  # LW
+            rd = (instr >> 7) & 0x1F
+            rs1 = (instr >> 15) & 0x1F
+            imm = (instr >> 20) & 0xFFF
+            imm = imm - 4096 if imm & 0x800 else imm
+            return f"LW x{rd}, {imm}(x{rs1})"
+            
+        elif opcode == 0b0100011:  # SW
+            rs1 = (instr >> 15) & 0x1F
+            rs2 = (instr >> 20) & 0x1F
+            imm11_5 = (instr >> 25) & 0x7F
+            imm4_0 = (instr >> 7) & 0x1F
+            imm = (imm11_5 << 5) | imm4_0
+            imm = imm - 4096 if imm & 0x800 else imm
+            return f"SW x{rs2}, {imm}(x{rs1})"
+            
+        elif opcode == 0b1100011:  # Tipo B
+            funct3 = (instr >> 12) & 0x7
+            rs1 = (instr >> 15) & 0x1F
+            rs2 = (instr >> 20) & 0x1F
+            imm12 = (instr >> 31) & 0x1
+            imm10_5 = (instr >> 25) & 0x3F
+            imm4_1 = (instr >> 8) & 0xF
+            imm11 = (instr >> 7) & 0x1
+            imm = (imm12 << 12) | (imm11 << 11) | (imm10_5 << 5) | (imm4_1 << 1)
+            imm = imm - 8192 if imm & 0x1000 else imm
+            
+            if funct3 == 0:
+                return f"BEQ x{rs1}, x{rs2}, {imm}"
+            elif funct3 == 1:
+                return f"BNE x{rs1}, x{rs2}, {imm}"
+            else:
+                return f"B-type x{rs1}, x{rs2}, {imm}"
+                
+        elif opcode == 0b1101111:  # JAL
+            rd = (instr >> 7) & 0x1F
+            imm = (
+                ((instr >> 31) & 0x1) << 20 |
+                ((instr >> 21) & 0x3FF) << 1 |
+                ((instr >> 20) & 0x1) << 11 |
+                ((instr >> 12) & 0xFF) << 12
+            )
+            imm = imm - (1 << 21) if imm & (1 << 20) else imm
+            return f"JAL x{rd}, {imm}"
+            
+        return "Instrução desconhecida"
             
     def atualizar_registradores(self):
         """Atualiza a visualização dos registradores"""

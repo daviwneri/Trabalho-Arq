@@ -40,6 +40,76 @@ class Simulador:
             instrucoes.append(instr)
         return instrucoes
     
+    def instrucao_para_assembly(self, data_dict):
+        """Converte dados de instrução decodificada para formato assembly"""
+        if not data_dict or 'tipo' not in data_dict:
+            return ""
+            
+        tipo = data_dict['tipo']
+        
+        if tipo == 'R':
+            # Instruções tipo R: ADD, SUB, AND, OR, etc.
+            funct3 = data_dict.get('funct3', 0)
+            funct7 = data_dict.get('funct7', 0)
+            rd = data_dict.get('rd', 0)
+            rs1 = data_dict.get('rs1', 0)
+            rs2 = data_dict.get('rs2', 0)
+            
+            if funct3 == 0 and funct7 == 0:
+                return f"ADD x{rd}, x{rs1}, x{rs2}"
+            elif funct3 == 0 and funct7 == 32:
+                return f"SUB x{rd}, x{rs1}, x{rs2}"
+            elif funct3 == 7:
+                return f"AND x{rd}, x{rs1}, x{rs2}"
+            elif funct3 == 6:
+                return f"OR x{rd}, x{rs1}, x{rs2}"
+            else:
+                return f"R-type x{rd}, x{rs1}, x{rs2}"
+                
+        elif tipo == 'I':
+            # Instruções tipo I: ADDI, etc.
+            funct3 = data_dict.get('funct3', 0)
+            rd = data_dict.get('rd', 0)
+            rs1 = data_dict.get('rs1', 0)
+            imm = data_dict.get('imm', 0)
+            
+            if funct3 == 0:
+                return f"ADDI x{rd}, x{rs1}, {imm}"
+            else:
+                return f"I-type x{rd}, x{rs1}, {imm}"
+                
+        elif tipo == 'LW':
+            rd = data_dict.get('rd', 0)
+            rs1 = data_dict.get('rs1', 0)
+            imm = data_dict.get('imm', 0)
+            return f"LW x{rd}, {imm}(x{rs1})"
+            
+        elif tipo == 'SW':
+            rs1 = data_dict.get('rs1', 0)
+            rs2 = data_dict.get('rs2', 0)
+            imm = data_dict.get('imm', 0)
+            return f"SW x{rs2}, {imm}(x{rs1})"
+            
+        elif tipo == 'B':
+            funct3 = data_dict.get('funct3', 0)
+            rs1 = data_dict.get('rs1', 0)
+            rs2 = data_dict.get('rs2', 0)
+            imm = data_dict.get('imm', 0)
+            
+            if funct3 == 0:
+                return f"BEQ x{rs1}, x{rs2}, {imm}"
+            elif funct3 == 1:
+                return f"BNE x{rs1}, x{rs2}, {imm}"
+            else:
+                return f"B-type x{rs1}, x{rs2}, {imm}"
+                
+        elif tipo == 'J':
+            rd = data_dict.get('rd', 0)
+            imm = data_dict.get('imm', 0)
+            return f"JAL x{rd}, {imm}"
+            
+        return f"{tipo}-type"
+    
 
     # etapas --------------------------------------------------
 
