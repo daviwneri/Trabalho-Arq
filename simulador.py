@@ -161,6 +161,7 @@ class Simulador:
                 'rd': (instr >> 7) & 0x1F,
                 'funct3': (instr >> 12) & 0x7,
                 'rs1': (instr >> 15) & 0x1F,
+                'rs2': (instr >> 20) & 0x1F,
                 'imm': imm
             }
 
@@ -253,27 +254,27 @@ class Simulador:
             else:
                 resultado = 0
 
-            self.EX_MEM = {'tipo': 'R', 'rd': self.ID_EX['rd'], 'resultado': resultado}
+            self.EX_MEM = {'tipo': 'R', 'rd': self.ID_EX['rd'], 'resultado': resultado, 'rs1': self.ID_EX['rs1'], 'rs2': self.ID_EX['rs2']}
 
 
         elif tipo == 'I':
             rs1 = self.bancoReg[self.ID_EX['rs1']]
             imm = self.ID_EX['imm']
             resultado = rs1 + imm
-            self.EX_MEM = {'tipo': 'I', 'rd': self.ID_EX['rd'], 'resultado': resultado}
+            self.EX_MEM = {'tipo': 'I', 'rd': self.ID_EX['rd'], 'resultado': resultado, 'imm': self.ID_EX['imm'], 'rs1': self.ID_EX['rs1']}
 
 
         elif tipo == 'LW':
             rs1 = self.bancoReg[self.ID_EX['rs1']]
             endereco = rs1 + self.ID_EX['imm']
-            self.EX_MEM = {'tipo': 'LW', 'rd': self.ID_EX['rd'], 'endereco': endereco}
+            self.EX_MEM = {'tipo': 'LW', 'rd': self.ID_EX['rd'], 'endereco': endereco, 'imm': self.ID_EX['imm'], 'rs1': self.ID_EX['rs1'], 'rs2': self.ID_EX['rs2']}
 
         elif tipo == 'SW':
 
             rs1 = self.bancoReg[self.ID_EX['rs1']]
             rs2 = self.bancoReg[self.ID_EX['rs2']]
             endereco = rs1 + self.ID_EX['imm']
-            self.EX_MEM = {'tipo': 'SW', 'rs2_valor': rs2, 'endereco': endereco}
+            self.EX_MEM = {'tipo': 'SW', 'rs2_valor': rs2, 'endereco': endereco, 'imm': self.ID_EX['imm'], 'rs1': self.ID_EX['rs1']}
 
         elif tipo == 'B':
 
@@ -289,7 +290,7 @@ class Simulador:
                 desvia = True
             elif self.ID_EX['funct3'] == 0b101 and rs1 >= rs2:  # BGE
                 desvia = True
-            self.EX_MEM = {'tipo': 'B', 'desvia': desvia, 'novo_pc': self.ID_EX['pc'] + self.ID_EX['imm']}
+            self.EX_MEM = {'tipo': 'B', 'desvia': desvia, 'novo_pc': self.ID_EX['pc'] + self.ID_EX['imm'], 'imm': self.ID_EX['imm'], 'rs1': self.ID_EX['rs1'], 'rs2': self.ID_EX['rs2']}
             
 
         elif tipo == 'J':
@@ -297,7 +298,8 @@ class Simulador:
                 'tipo': 'J',
                 'rd': self.ID_EX['rd'],
                 'pc_retorno': self.ID_EX['pc'] + 4,
-                'novo_pc': self.ID_EX['pc'] + self.ID_EX['imm']
+                'novo_pc': self.ID_EX['pc'] + self.ID_EX['imm'],
+                'imm': self.ID_EX['imm']
             }
 
 
@@ -310,11 +312,11 @@ class Simulador:
 
         if tipo == 'LW':
             val = self.memoria_dados.get(self.EX_MEM['endereco'], 0)
-            self.MEM_WB = {'tipo': 'LW', 'rd': self.EX_MEM['rd'], 'resultado': val}
+            self.MEM_WB = {'tipo': 'LW', 'rd': self.EX_MEM['rd'], 'resultado': val, 'imm': self.EX_MEM['imm'], 'rs1': self.EX_MEM['rs1'], 'rs2': self.EX_MEM['rs2']}
 
         elif tipo == 'SW':
             self.memoria_dados[self.EX_MEM['endereco']] = self.EX_MEM['rs2_valor']
-            self.MEM_WB = {'tipo': 'SW'}
+            self.MEM_WB = {'tipo': 'SW', 'imm': self.EX_MEM['imm'], 'rs1': self.EX_MEM['rs1']}
 
         elif tipo in ['R', 'I']:
             self.MEM_WB = self.EX_MEM
@@ -324,7 +326,7 @@ class Simulador:
                 self.pc = self.EX_MEM['novo_pc']
                 self.IF_ID = {}
                 self.ID_EX = {}
-            self.MEM_WB = {'tipo': 'B'}
+            self.MEM_WB = {'tipo': 'B', 'rs1': self.EX_MEM['rs1'], 'rs2': self.EX_MEM['rs2'], 'imm': self.EX_MEM['imm']}
 
         elif tipo == 'J':
             if self.EX_MEM['rd'] != 0:
@@ -332,7 +334,7 @@ class Simulador:
             self.pc = self.EX_MEM['novo_pc']
             self.IF_ID = {}
             self.ID_EX = {}
-            self.MEM_WB = {'tipo': 'J'}
+            self.MEM_WB = {'tipo': 'J', 'imm': self.EX_MEM['imm']}
 
         
     def etapa_WB (self):
