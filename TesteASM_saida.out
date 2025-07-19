@@ -1,0 +1,477 @@
+=== LOG DE EXECUÇÃO DO SIMULADOR RISC-V ===
+
+
+=== CICLO 1 ===
+Pipeline:
+  IF: 0x00002083 (PC: 0x00000000)
+  ID: vazio
+  EX: vazio
+  MEM: vazio
+  WB: vazio
+
+Registradores não-zero:
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x00000000
+
+
+=== CICLO 2 ===
+Pipeline:
+  IF: 0x00402103 (PC: 0x00000004)
+  ID: LW
+  EX: vazio
+  MEM: vazio
+  WB: vazio
+
+Registradores não-zero:
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x00000000
+
+
+=== CICLO 3 ===
+Pipeline:
+  IF: 0x00000013 (PC: 0x00000008)
+  ID: LW
+  EX: LW
+  MEM: vazio
+  WB: vazio
+
+Registradores não-zero:
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x00000000
+
+
+=== CICLO 4 ===
+Pipeline:
+  IF: 0x00000013 (PC: 0x0000000C)
+  ID: I
+  EX: LW
+  MEM: LW
+  WB: vazio
+
+Registradores não-zero:
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x00000000
+
+
+=== CICLO 5 ===
+Pipeline:
+  IF: 0x002081B3 (PC: 0x00000010)
+  ID: I
+  EX: I
+  MEM: LW
+  WB: LW -> x1
+
+Registradores não-zero:
+  x1: 15
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x00000000
+
+
+=== CICLO 6 ===
+Pipeline:
+  IF: 0x00000013 (PC: 0x00000014)
+  ID: R
+  EX: I
+  MEM: I
+  WB: LW -> x2
+
+Registradores não-zero:
+  x1: 15
+  x2: 27
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x00000000
+
+
+=== CICLO 7 ===
+Pipeline:
+  IF: 0x00000013 (PC: 0x00000018)
+  ID: I
+  EX: R
+  MEM: I
+  WB: I (sem write-back)
+
+Registradores não-zero:
+  x1: 15
+  x2: 27
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x00000000
+
+
+=== CICLO 8 ===
+Pipeline:
+  IF: 0x00302423 (PC: 0x0000001C)
+  ID: I
+  EX: I
+  MEM: R
+  WB: I (sem write-back)
+
+Registradores não-zero:
+  x1: 15
+  x2: 27
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x00000000
+
+
+=== CICLO 9 ===
+Pipeline:
+  IF: 0x00000013 (PC: 0x00000020)
+  ID: SW
+  EX: I
+  MEM: I
+  WB: R -> x3
+
+Registradores não-zero:
+  x1: 15
+  x2: 27
+  x3: 42
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x00000000
+
+
+=== CICLO 10 ===
+Pipeline:
+  IF: 0x00000013 (PC: 0x00000024)
+  ID: I
+  EX: SW
+  MEM: I
+  WB: I (sem write-back)
+
+Registradores não-zero:
+  x1: 15
+  x2: 27
+  x3: 42
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x00000000
+
+
+=== CICLO 11 ===
+Pipeline:
+  IF: 0x02A00213 (PC: 0x00000028)
+  ID: I
+  EX: I
+  MEM: SW
+  WB: I (sem write-back)
+
+Registradores não-zero:
+  x1: 15
+  x2: 27
+  x3: 42
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x0000002A
+
+
+=== CICLO 12 ===
+Pipeline:
+  IF: 0x00000013 (PC: 0x0000002C)
+  ID: I
+  EX: I
+  MEM: I
+  WB: SW (sem write-back)
+
+Registradores não-zero:
+  x1: 15
+  x2: 27
+  x3: 42
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x0000002A
+
+
+=== CICLO 13 ===
+Pipeline:
+  IF: 0x00000013 (PC: 0x00000030)
+  ID: I
+  EX: I
+  MEM: I
+  WB: I (sem write-back)
+
+Registradores não-zero:
+  x1: 15
+  x2: 27
+  x3: 42
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x0000002A
+
+
+=== CICLO 14 ===
+Pipeline:
+  IF: 0x00418463 (PC: 0x00000034)
+  ID: I
+  EX: I
+  MEM: I
+  WB: I (sem write-back)
+
+Registradores não-zero:
+  x1: 15
+  x2: 27
+  x3: 42
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x0000002A
+
+
+=== CICLO 15 ===
+Pipeline:
+  IF: 0x00E00293 (PC: 0x00000038)
+  ID: B
+  EX: I
+  MEM: I
+  WB: I -> x4
+
+Registradores não-zero:
+  x1: 15
+  x2: 27
+  x3: 42
+  x4: 42
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x0000002A
+
+
+=== CICLO 16 ===
+Pipeline:
+  IF: 0x00100313 (PC: 0x0000003C)
+  ID: I
+  EX: B
+  MEM: I
+  WB: I (sem write-back)
+
+Registradores não-zero:
+  x1: 15
+  x2: 27
+  x3: 42
+  x4: 42
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x0000002A
+
+
+=== CICLO 17 ===
+Pipeline:
+  IF: 0x00100313 (PC: 0x0000003C)
+  ID: vazio
+  EX: vazio
+  MEM: B
+  WB: I (sem write-back)
+
+Registradores não-zero:
+  x1: 15
+  x2: 27
+  x3: 42
+  x4: 42
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x0000002A
+
+
+=== CICLO 18 ===
+Pipeline:
+  IF: 0x0080006F (PC: 0x00000040)
+  ID: I
+  EX: vazio
+  MEM: vazio
+  WB: B (sem write-back)
+
+Registradores não-zero:
+  x1: 15
+  x2: 27
+  x3: 42
+  x4: 42
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x0000002A
+
+
+=== CICLO 19 ===
+Pipeline:
+  IF: 0x00F00393 (PC: 0x00000044)
+  ID: J
+  EX: I
+  MEM: vazio
+  WB: vazio
+
+Registradores não-zero:
+  x1: 15
+  x2: 27
+  x3: 42
+  x4: 42
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x0000002A
+
+
+=== CICLO 20 ===
+Pipeline:
+  IF: 0x06300513 (PC: 0x00000048)
+  ID: I
+  EX: J
+  MEM: I
+  WB: vazio
+
+Registradores não-zero:
+  x1: 15
+  x2: 27
+  x3: 42
+  x4: 42
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x0000002A
+
+
+=== CICLO 21 ===
+Pipeline:
+  IF: 0x06300513 (PC: 0x00000048)
+  ID: vazio
+  EX: vazio
+  MEM: J
+  WB: I -> x6
+
+Registradores não-zero:
+  x1: 15
+  x2: 27
+  x3: 42
+  x4: 42
+  x6: 1
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x0000002A
+
+
+=== CICLO 22 ===
+Pipeline:
+  IF: vazio
+  ID: I
+  EX: vazio
+  MEM: vazio
+  WB: J (sem write-back)
+
+Registradores não-zero:
+  x1: 15
+  x2: 27
+  x3: 42
+  x4: 42
+  x6: 1
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x0000002A
+
+
+=== CICLO 23 ===
+Pipeline:
+  IF: vazio
+  ID: vazio
+  EX: I
+  MEM: vazio
+  WB: vazio
+
+Registradores não-zero:
+  x1: 15
+  x2: 27
+  x3: 42
+  x4: 42
+  x6: 1
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x0000002A
+
+
+=== CICLO 24 ===
+Pipeline:
+  IF: vazio
+  ID: vazio
+  EX: vazio
+  MEM: I
+  WB: vazio
+
+Registradores não-zero:
+  x1: 15
+  x2: 27
+  x3: 42
+  x4: 42
+  x6: 1
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x0000002A
+
+
+=== CICLO 25 ===
+Pipeline:
+  IF: vazio
+  ID: vazio
+  EX: vazio
+  MEM: vazio
+  WB: I -> x10
+
+Registradores não-zero:
+  x1: 15
+  x2: 27
+  x3: 42
+  x4: 42
+  x6: 1
+  x10: 99
+
+Memória:
+  0x00000000: 0x0000000F
+  0x00000004: 0x0000001B
+  0x00000008: 0x0000002A
+

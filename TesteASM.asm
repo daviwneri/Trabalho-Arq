@@ -17,10 +17,17 @@ resultado: .word 0
 
     SW x3, 8(x0)
 
-    ADDI x4, x0, 42 
+    ADDI x0, x0, 0
+    ADDI x0, x0, 0
+
+    ADDI x4, x0, 42
+
+    ADDI x0, x0, 0
+    ADDI x0, x0, 0
+    
     BEQ x3, x4, iguais
 
-    ADDI x5, x0, 0
+    ADDI x5, x0, 14
 
 iguais:
     ADDI x6, x0, 1
