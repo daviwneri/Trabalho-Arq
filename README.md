@@ -221,6 +221,8 @@ fim:
     ADDI x10, x0, 99     # x10 = 99
 ```
 
+obs: O programa do exemplo do arquivo TesteASM.asm é diferente do programa usado para gerar o arquivo TesteBIN.bin
+
 ## Arquivos de Saída
 
 O simulador gera automaticamente:
