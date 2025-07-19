@@ -331,7 +331,7 @@ class InterfaceSimuladorRISCV:
                 text_file = f"{base_name}_text.bin"
                 
                 self.simulador = Simulador(data_file, text_file)
-                self.wb_buffer = {}  # Limpar o buffer do WB
+                self.wb_buffer = {}  
                 self.atualizar_interface()
                 
                 self.btn_executar.config(state=tk.NORMAL)
@@ -342,7 +342,24 @@ class InterfaceSimuladorRISCV:
                 
             except Exception as e:
                 messagebox.showerror("Erro", f"Erro ao resetar: {str(e)}")
+
+        elif self.arquivo_bin:
+            try:
+                text_file = os.path.basename(self.arquivo_bin)
                 
+                self.simulador = Simulador(None, text_file)
+                self.wb_buffer = {}  
+                self.atualizar_interface()
+                
+                self.btn_executar.config(state=tk.NORMAL)
+                self.btn_executar_tudo.config(state=tk.NORMAL)
+                
+                self.status_bar.config(text="Simulador resetado")
+                self.log("=== SIMULADOR RESETADO ===")
+                
+            except Exception as e:
+                messagebox.showerror("Erro", f"Erro ao resetar: {str(e)}")
+
     def simulador_terminou(self):
         """Verifica se o simulador terminou a execução"""
         if not self.simulador:
@@ -463,7 +480,7 @@ class InterfaceSimuladorRISCV:
                 
             if not data:
                 if stage == 'WB':
-                    text_widget.insert(tk.END, "Nenhuma operação\nde write-back")
+                    text_widget.insert(tk.END, "Nenhuma instrução\nde write-back")
                 else:
                     text_widget.insert(tk.END, "Nenhuma instrução\nno estágio")
                 assembly_text = ""
