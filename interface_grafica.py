@@ -261,7 +261,10 @@ class InterfaceSimuladorRISCV:
                 self.atualizar_interface()
                 
                 # Preparar arquivo de saída
-                self.arquivo_saida = f"{base_name}_saida.out"
+                if self.arquivo_asm:
+                    self.arquivo_saida = "saida.out"
+                else:
+                    self.arquivo_saida = "saida.out"
                 with open(self.arquivo_saida, 'w', encoding='utf-8') as f:
                     f.write("=== LOG DE EXECUÇÃO DO SIMULADOR RISC-V ===\n\n")
                 

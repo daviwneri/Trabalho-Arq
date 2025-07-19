@@ -222,7 +222,7 @@ class Montador:
             
             # Determina se tem RD explícito ou não
             if len(tokens) == 2:
-                # Formato: JAL LABEL (RD implícito como ra)
+                # Formato: JAL LABEL (RD implícito como ra) ou J LABEL (RD implícito como x0)
                 label = tokens[1]
                 rd = reg('ra') if instr == 'JAL' else 0
             else:

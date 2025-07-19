@@ -142,7 +142,7 @@ class Simulador:
                 'funct7': (instr >> 25) & 0x7F
             }
 
-        elif opcode == 0b0010011:  # Tipo I (ex: ADDI)
+        elif opcode == 0b0010011:  # Tipo I (ex: ADDI, SLLI, SRLI)
             imm = (instr >> 20) & 0xFFF
             imm = imm - 4096 if imm & 0x800 else imm
             self.ID_EX = {
@@ -151,6 +151,17 @@ class Simulador:
                 'funct3': (instr >> 12) & 0x7,
                 'rs1': (instr >> 15) & 0x1F,
                 'imm': imm
+            }
+
+        elif opcode == 0b1100111:  # JALR
+            imm = (instr >> 20) & 0xFFF
+            imm = imm - 4096 if imm & 0x800 else imm
+            self.ID_EX = {
+                'tipo': 'JALR',
+                'rd': (instr >> 7) & 0x1F,
+                'rs1': (instr >> 15) & 0x1F,
+                'imm': imm,
+                'pc': self.IF_ID['pc']
             }
 
         elif opcode == 0b0000011:  # LW
@@ -246,7 +257,7 @@ class Simulador:
                 resultado = rs1 << (rs2 & 0x1F)  # SLL
             elif funct3 == 0b101:
                 resultado = rs1 >> (rs2 & 0x1F)  # SRL
-            elif funct3 == 0b100 and funct7 == 0b0000001:
+            elif funct3 == 0b110 and funct7 == 0b0000001:
                 resultado = rs1 % rs2  # REM
             elif funct3 == 0b100 and funct7 == 0b0000001:
                 resultado = rs1 // rs2  # DIV
@@ -259,7 +270,17 @@ class Simulador:
         elif tipo == 'I':
             rs1 = self.bancoReg[self.ID_EX['rs1']]
             imm = self.ID_EX['imm']
-            resultado = rs1 + imm
+            funct3 = self.ID_EX.get('funct3', 0)
+            
+            if funct3 == 0b000:  # ADDI
+                resultado = rs1 + imm
+            elif funct3 == 0b001:  # SLLI
+                resultado = rs1 << (imm & 0x1F)
+            elif funct3 == 0b101:  # SRLI
+                resultado = rs1 >> (imm & 0x1F)
+            else:
+                resultado = rs1 + imm  # Default para ADDI
+                
             self.EX_MEM = {'tipo': 'I', 'rd': self.ID_EX['rd'], 'resultado': resultado}
 
 
@@ -291,6 +312,15 @@ class Simulador:
                 desvia = True
             self.EX_MEM = {'tipo': 'B', 'desvia': desvia, 'novo_pc': self.ID_EX['pc'] + self.ID_EX['imm']}
             
+        elif tipo == 'JALR':
+            rs1 = self.bancoReg[self.ID_EX['rs1']]
+            novo_pc = (rs1 + self.ID_EX['imm']) & ~1  # Alinha para palavra
+            self.EX_MEM = {
+                'tipo': 'JALR',
+                'rd': self.ID_EX['rd'],
+                'pc_retorno': self.ID_EX['pc'] + 4,
+                'novo_pc': novo_pc
+            }
 
         elif tipo == 'J':
             self.EX_MEM = {
@@ -333,6 +363,14 @@ class Simulador:
             self.IF_ID = {}
             self.ID_EX = {}
             self.MEM_WB = {'tipo': 'J'}
+
+        elif tipo == 'JALR':
+            if self.EX_MEM['rd'] != 0:
+                self.bancoReg[self.EX_MEM['rd']] = self.EX_MEM['pc_retorno']
+            self.pc = self.EX_MEM['novo_pc']
+            self.IF_ID = {}
+            self.ID_EX = {}
+            self.MEM_WB = {'tipo': 'JALR'}
 
         
     def etapa_WB (self):
